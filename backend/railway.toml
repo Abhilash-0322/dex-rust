@@ -1,0 +1,10 @@
+# Railway.app deployment config
+# Automatically detected by Railway
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+startCommand = "crypto-tracker-backend"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
