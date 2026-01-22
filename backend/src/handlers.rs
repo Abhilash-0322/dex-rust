@@ -194,32 +194,44 @@ pub async fn toggle_favorite(
 ) -> Result<HttpResponse> {
     let collection = db.get_tokens_collection();
     
+    // First, get current token to toggle favorite
     let filter = doc! { "token_id": &req.token_id };
-    let update = doc! {
-        "$set": {
-            "is_favorite": req.is_favorite
-        }
-    };
-
-    match collection.update_one(filter.clone(), update, None).await {
-        Ok(result) => {
-            if result.matched_count == 0 {
-                Ok(HttpResponse::NotFound().json(doc! {
-                    "error": "Token not found"
-                }))
-            } else {
-                match collection.find_one(filter, None).await {
-                    Ok(Some(token)) => Ok(HttpResponse::Ok().json(token)),
-                    _ => Ok(HttpResponse::Ok().json(doc! {
-                        "message": "Favorite updated successfully"
-                    })),
+    
+    match collection.find_one(filter.clone(), None).await {
+        Ok(Some(token)) => {
+            let new_favorite = !token.is_favorite;
+            let update = doc! {
+                "$set": {
+                    "is_favorite": new_favorite
+                }
+            };
+            
+            match collection.update_one(filter.clone(), update, None).await {
+                Ok(_) => {
+                    match collection.find_one(filter, None).await {
+                        Ok(Some(token)) => Ok(HttpResponse::Ok().json(token)),
+                        _ => Ok(HttpResponse::Ok().json(doc! {
+                            "message": "Favorite updated successfully"
+                        })),
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to update favorite: {}", e);
+                    Ok(HttpResponse::InternalServerError().json(doc! {
+                        "error": "Failed to update favorite"
+                    }))
                 }
             }
         }
+        Ok(None) => {
+            Ok(HttpResponse::NotFound().json(doc! {
+                "error": "Token not found"
+            }))
+        }
         Err(e) => {
-            log::error!("Error updating favorite: {}", e);
+            log::error!("Failed to find token: {}", e);
             Ok(HttpResponse::InternalServerError().json(doc! {
-                "error": format!("Database error: {}", e)
+                "error": "Database error"
             }))
         }
     }

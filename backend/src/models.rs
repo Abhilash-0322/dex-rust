@@ -58,10 +58,9 @@ pub struct CoinGeckoMarket {
 
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FavoriteRequest {
     pub token_id: String,
-    pub is_favorite: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -91,6 +90,30 @@ pub struct TokenStats {
     pub avg_price_change_24h: f64,
     pub biggest_gainer: Option<CryptoToken>,
     pub biggest_loser: Option<CryptoToken>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MarketStats {
+    pub total_market_cap: f64,
+    pub total_volume_24h: f64,
+    pub bitcoin_dominance: f64,
+    pub top_gainer: Option<TokenChange>,
+    pub top_loser: Option<TokenChange>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TokenChange {
+    pub token_id: String,
+    pub name: String,
+    pub symbol: String,
+    pub change_percentage: f64,
+    pub current_price: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PriceHistoryEntry {
+    pub timestamp: i64,
+    pub price: f64,
 }
 
 #[cfg(test)]
